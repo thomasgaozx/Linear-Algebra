@@ -74,16 +74,20 @@ public class Matrix {
 		this.matrix=matrix;
 	}
 
-	//get methods
+	//get and set methods
 	public double getAij(int i, int j) {
 		return matrix[i][j];
 	} 
+	public void setAij(double value, int i, int j) {
+		matrix[i][j]=value;
+	}
 	public int getm() {
 		return m;
 	}
 	public int getn() {
 		return n;
 	}
+
 
 	//math methods
 	public boolean equals(Matrix B) {
