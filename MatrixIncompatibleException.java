@@ -1,4 +1,4 @@
-public class IncompatibleMatrixException extends Exception {
+public class MatrixIncompatibleException extends Exception {
 
 	private static class MatrixPrint {
 		public static String getString (Matrix[] MatrixArray) {
@@ -10,19 +10,19 @@ public class IncompatibleMatrixException extends Exception {
 		}
 	}
 
-	public IncompatibleMatrixException() {
+	public MatrixIncompatibleException() {
 		super("The matrices are not compatible!");
 	}
 
-	public IncompatibleMatrixException(String message) {
+	public MatrixIncompatibleException(String message) {
 		super(message);
 	}
 
-	public IncompatibleMatrixException(Matrix ... MatrixArray) {
+	public MatrixIncompatibleException(Matrix ... MatrixArray) {
 		super("The matrices: \n" + MatrixPrint.getString(MatrixArray) + "are not compatible.");
 	}
 
-	public IncompatibleMatrixException(Matrix M, Matrix N) {
+	public MatrixIncompatibleException(Matrix M, Matrix N) {
 		super("You cannot multiply a "+M.getm()+" * "+M.getn()+" matrix to a "+N.getm()+" * " + N.getn() + "matrix.");
 	}
 }
