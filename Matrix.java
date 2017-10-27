@@ -89,7 +89,7 @@ public class Matrix {
 	}
 
 
-	//math methods
+	//major methods
 	public boolean equals(Matrix B) {
 		if (this.m!=B.getm() || this.n!=B.getn()) {
 			return false;
@@ -102,9 +102,22 @@ public class Matrix {
 				}
 			}
 			return true;
-		} 
+		}
 	}
-	public Matrix multiplies (Matrix B) throws MatrixIncompatibleException { // return new matrix, not modifying old matrix
+
+	public void adds(Matrix B) throws MatrixIncompatibleException {
+		if (m!=B.getm() || n!=B.getn()) {
+			throw new MatrixIncompatibleException();
+		}
+
+		for (int i=0; i<m; i++) {
+			for (int j=0; j<n; j++) {
+				matrix[i][j]+=B.getAij(i,j);
+			}
+		}
+	}
+
+	public Matrix multiplies(Matrix B) throws MatrixIncompatibleException { // return new matrix, not modifying old matrix
 		int newm=this.m;
 		int oldn=this.n;
 		int newn=B.getn();
@@ -141,7 +154,7 @@ public class Matrix {
 		matrix[row1]=matrix[row2];
 		matrix[row2]=rowReserve;
 	}
-	public void scale(int row, int constant) { //row starts from 0, not 1
+	public void scale(int row, double constant) { //row starts from 0, not 1
 		for (int j=0; j<n; j++) {
 			matrix[row][j]*=constant;
 		}
