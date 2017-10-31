@@ -1,8 +1,4 @@
-public class ReducedRowEchelonForm extends Matrix {
-
-	//instance variables
-	private int rank;
-	private Matrix RREF;
+public class ReducedRowEchelonForm { // a static class
 
 	//main function for testing
 	public static void main(String[] args) {
@@ -20,21 +16,10 @@ public class ReducedRowEchelonForm extends Matrix {
 		reduceToRREF(A);
 		System.out.println("\n"+A.toString());
 
-		System.out.println(isRREF(A));
-	}
-
-	//Constructor
-	public ReducedRowEchelonForm(Matrix M) {
-		this.RREF=M; // a .clone method is to be implemented later
-		this.rank = reduceToRREF(RREF);
-	}
-
-	//get methods
-	public double getAij(int i, int j) {
-		return RREF.getAij(i,j);
-	}
-	public int getRank() {
-		return rank;
+		Matrix B = new Matrix();
+		System.out.println(B);
+		reduceToRREF(B);
+		System.out.println("\n"+B.toString());
 	}
 
 	//major methods

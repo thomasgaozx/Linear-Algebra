@@ -1,10 +1,11 @@
 import java.util.Scanner;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class Matrix {
 
 	private static class Help {
-		private static String leftFill(String givenString, int width, String fillChar) {
+		private static String leftFill(String givenString, int width, String fillChar) { 
 			if (givenString.length()>=width) {
 				return givenString;
 			} else {
@@ -38,18 +39,15 @@ public class Matrix {
 
 	//main function for testing
 	public static void main(String[] args) {
-		System.out.print("Input matrix A. ");
 		Matrix A = new Matrix();
-		System.out.println("Matrix A is: \n"+A.toString()+"\n");
-		
-		System.out.print("Input matrix B. ");
-		Matrix B = new Matrix();
-		System.out.println("Matrix B is: \n"+B.toString()+"\n\n"+"AB = ");
+		System.out.println(A+"\n\n");
+		Matrix inverseA = A.inverse();
+		System.out.println(inverseA); 
+		System.out.println(inverseA.inverse());
 		try {
-			System.out.println(A.multiplies(B));
-		} catch(MatrixIncompatibleException e) {
+			System.out.println(A.multiplies(inverseA));
+		} catch (MatrixIncompatibleException e) {
 			System.out.println(e.getMessage());
-			System.exit(0);
 		}
 	}
 	
@@ -88,6 +86,23 @@ public class Matrix {
 		return n;
 	}
 
+	//elementary row operations
+	public void swap(int row1, int row2) {
+		double[] rowReserve=null;
+		rowReserve=matrix[row1];
+		matrix[row1]=matrix[row2];
+		matrix[row2]=rowReserve;
+	}
+	public void scale(int row, double constant) { //row starts from 0, not 1
+		for (int j=0; j<n; j++) {
+			matrix[row][j]*=constant;
+		}
+	}
+	public void addToRow(int row1, int row2, double multipleOfRow2) {
+		for (int j=0; j<n; j++) {
+			matrix[row1][j]+=multipleOfRow2*matrix[row2][j];
+		}
+	}
 
 	//major methods
 	public boolean equals(Matrix B) {
@@ -104,7 +119,6 @@ public class Matrix {
 			return true;
 		}
 	}
-
 	public void adds(Matrix B) throws MatrixIncompatibleException {
 		if (m!=B.getm() || n!=B.getn()) {
 			throw new MatrixIncompatibleException();
@@ -116,7 +130,6 @@ public class Matrix {
 			}
 		}
 	}
-
 	public Matrix multiplies(Matrix B) throws MatrixIncompatibleException { // return new matrix, not modifying old matrix
 		int newm=this.m;
 		int oldn=this.n;
@@ -146,42 +159,120 @@ public class Matrix {
 		}
 		return new Matrix(n,m,returnMatrix);
 	}
+	public boolean isInvertible() { // BUG!!!!!!!
+		if (m!=n) {
+			return false;
+		} else {
+			Matrix copyM=this.copy();
+			int rank = RowEchelonForm.reduceToREF(copyM); 
+			return (rank==m);
+		}
+	}
+	public Matrix inverse() {
+		if (!isInvertible()) { 
+			return null;
+		} else {
+			double[][] augmentedForm = new double[m][2*n];
+			// setting left hand side
+			for (int i=0; i<m; i++) {
+				for (int j=0; j<n; j++) {
+					augmentedForm[i][j]=matrix[i][j];
+				}
+			}
+			// setting right hand side
+			for (int i=0; i<m; i++) {
+				for (int j=n; j<2*n; j++) {
+					if (i==(j-n)) {
+						augmentedForm[i][j]=1; //identity matrix for right hand side
+					}
+				}
+			}
+			// reduce to RREF
+			Matrix overallMatrix = new Matrix(m,2*n,augmentedForm);
+			ReducedRowEchelonForm.reduceToRREF(overallMatrix);
+			// getting right hand side
+			double[][] returnArray = new double[m][n];
+			for (int i=0; i<m; i++) {
+				for (int j=n; j<2*n; j++) { 
+					returnArray[i][j-n]=overallMatrix.getAij(i,j); 
+				} 
+			}
+			return new Matrix(m,n,returnArray);
+		}
+	}
 
-	//elementary row operations
-	public void swap(int row1, int row2) {
-		double[] rowReserve=null;
-		rowReserve=matrix[row1];
-		matrix[row1]=matrix[row2];
-		matrix[row2]=rowReserve;
-	}
-	public void scale(int row, double constant) { //row starts from 0, not 1
-		for (int j=0; j<n; j++) {
-			matrix[row][j]*=constant;
+	// copy method
+	public Matrix copy() {
+		double[][] copyM = new double[m][n];
+		for (int i=0; i<m; i++) {
+			for (int j=0; j<n; j++) {
+				copyM[i][j] = matrix[i][j];
+			}
 		}
+		return new Matrix(m,n,copyM);
 	}
-	public void addToRow(int row1, int row2, double multipleOfRow2) {
-		for (int j=0; j<n; j++) {
-			matrix[row1][j]+=multipleOfRow2*matrix[row2][j];
+
+	// special matrices:
+	public static Matrix identityMatrix(int k) {
+		double[][] Id = new double[k][k];
+		for (int i=0; i<k; i++) {
+			Id[i][i]=1;
 		}
+		return new Matrix(k,k,Id);
+	}
+	public static Matrix zeroMatrix(int k) {
+		double[][] O = new double[k][k];
+		for (int i=0; i<k; i++) {
+			O[i][0]=0; //1D array automatic initialization
+		}
+		return new Matrix(k,k,O);
 	}
 
 	//toString method
 	public String toString() {
+
+		/* setting a tolerance and modifying the original 2D array fixes the negative-zero bug.
+		However, the tolerance is too high, and may cause problems when smaller numbers are present in the matrix.
+		Thus, the modified entries are recorded in modifiedEntries list, and the original array is modified back again
+		after s (the string to be returned) is completed. Then, s is returned.
+		*/
+
+		Matrix originalCopy= this.copy(); // give back to the reference of the modified original matrix at the end
+		ArrayList<int[]> modifiedEntries = new ArrayList<>(10);
+
 		DecimalFormat standardDouble = new DecimalFormat("0.##");
 		String s="";
+		double TOLERANCE = 5E-3; //rounding
+
+		// permanent modification to the original matrix
+		for (int i=0; i<m; i++) {
+			for (int j=0; j<n; j++) {
+				if (Math.abs(matrix[i][j])<TOLERANCE) {
+					matrix[i][j]=0; 
+					int[] entry = {i,j}; 
+					modifiedEntries.add(entry);
+				}
+			}
+		}
+
+		// processing modified matrix
 		int maxLength = Help.entryMaxLength(this,standardDouble);
 		int columnMaxLength = 0; //to make it look better
 		int currentColumnLength = 0;
-		for (int i=0; i<m; i++) {
+
+		for (int i=0; i<m; i++) { // find max length for the first column
 			currentColumnLength = standardDouble.format(matrix[i][0]).length();
 			if (currentColumnLength > columnMaxLength) {
 				columnMaxLength = currentColumnLength;
 			}
 		}
+
 		s+=" _";
+		
 		for (int i=0; i<((maxLength+1)*(n-1)+columnMaxLength+2); i++) {
 			s+=" ";
 		}
+		
 		s+="_\n";
 
 		for (int i=0; i<m; i++) { //(i+1)th row
@@ -203,6 +294,12 @@ public class Matrix {
 				s+=" _|";
 			}
 		}
+
+		//restore the original matrix
+		for (int[] entry : modifiedEntries) { 
+			matrix[entry[0]][entry[1]]=originalCopy.getAij(entry[0],entry[1]);
+		}
+
 		return s;
 	}
 }
