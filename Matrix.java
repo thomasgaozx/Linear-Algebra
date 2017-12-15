@@ -37,19 +37,6 @@ public class Matrix {
 	private int n;
 	private double[][] matrix;
 
-	//main function for testing
-	public static void main(String[] args) {
-		Matrix A = new Matrix();
-		System.out.println(A+"\n\n");
-		Matrix inverseA = A.inverse();
-		System.out.println(inverseA); 
-		System.out.println(inverseA.inverse());
-		try {
-			System.out.println(A.multiplies(inverseA));
-		} catch (MatrixIncompatibleException e) {
-			System.out.println(e.getMessage());
-		}
-	}
 	
 	//constructors
 	public Matrix() {
@@ -66,6 +53,7 @@ public class Matrix {
 			}
 		}
 	}
+
 	public Matrix(int m, int n, double[][] matrix) {
 		this.m=m;
 		this.n=n;
@@ -159,7 +147,7 @@ public class Matrix {
 		}
 		return new Matrix(n,m,returnMatrix);
 	}
-	public boolean isInvertible() { // BUG!!!!!!!
+	public boolean isInvertible() { 
 		if (m!=n) {
 			return false;
 		} else {
